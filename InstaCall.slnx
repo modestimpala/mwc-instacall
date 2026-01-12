@@ -1,0 +1,8 @@
+<Solution>
+  <Configurations>
+    <BuildType Name="Debug" />
+    <BuildType Name="Mini" />
+    <BuildType Name="Release" />
+  </Configurations>
+  <Project Path="InstaCall/InstaCall.csproj" Id="4adc2241-d63d-f205-4052-0ef5e45f26eb" />
+</Solution>
