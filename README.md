@@ -19,7 +19,7 @@ It also disables the specific `GetFsmFloat` action that would normally overwrite
 
 ## Tuning
 
-Open `MyMod1/InstaCall.cs` and change:
+Open `InstaCall.cs` and change:
 
 - `FastWaitSeconds` (default `0.1f`) to control how fast the ringing + conversation are.
 - `ScanIntervalSeconds` to control how often the mod scans for `Calling` FSMs.
