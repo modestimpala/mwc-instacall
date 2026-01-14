@@ -1,6 +1,7 @@
 # InstaCall (MSCLoader / My Winter Car)
 
-Small MSCLoader mod that speeds up the **PlayMaker** phone calling FSMs (no Harmony).
+Small MSCLoader mod for My Winter Car that speeds up the phone calls to be near-instant.
+It does this by patching the PlayMaker FSM that controls the phone calls, without doing actual Harmony patches to the game code.
 
 ## What it does
 
