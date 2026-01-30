@@ -9,10 +9,13 @@ namespace InstaCall
     public class InstaCall : Mod
     {
         private static readonly HashSet<int> PatchedFsms = new HashSet<int>();
+        private static readonly List<PlayMakerFSM> PatchedFsmList = new List<PlayMakerFSM>();
 
         private const int TargetCallingFsmsToPatch = 3;
         private const float ScanIntervalSeconds = 0.25f;
+        private const float EnforceIntervalSeconds = 0.05f;
         private float _nextScanTime;
+        private float _nextEnforceTime;
         private int _callingFsmsPatched;
 
         public override string ID => "Moddy-InstaCall"; // Your (unique) mod ID 
@@ -33,8 +36,10 @@ namespace InstaCall
         {
             // Reset counters for a new load.
             _nextScanTime = 0f;
+            _nextEnforceTime = 0f;
             _callingFsmsPatched = 0;
             PatchedFsms.Clear();
+            PatchedFsmList.Clear();
 
             ModConsole.Log("[InstaCall] Loaded. Will patch up to 3 'Calling' FSM instances when they appear.");
         }
@@ -46,6 +51,13 @@ namespace InstaCall
 
         private void Mod_Update()
         {
+            // Continuously enforce fast call length on already-patched FSMs
+            if (Time.time >= _nextEnforceTime)
+            {
+                _nextEnforceTime = Time.time + EnforceIntervalSeconds;
+                EnforceCallLengthOnPatchedFsms();
+            }
+
             // After we've patched all known phone Calling FSMs, stop scanning.
             if (_callingFsmsPatched >= TargetCallingFsmsToPatch)
             {
@@ -78,6 +90,7 @@ namespace InstaCall
                 {
                     PatchCallingFsmSkipRinging(fsm);
                     PatchedFsms.Add(id);
+                    PatchedFsmList.Add(fsm);
 
                     _callingFsmsPatched++;
                     if (_callingFsmsPatched >= TargetCallingFsmsToPatch)
@@ -154,6 +167,29 @@ namespace InstaCall
             }
 
             ModConsole.Log($"[InstaCall] Calling FSM patched on '{fsm.gameObject.name}': set {changed} Wait(s) to {FastWaitSeconds:0.0}s.");
+        }
+
+        private static void EnforceCallLengthOnPatchedFsms()
+        {
+            const float FastWaitSeconds = 0.1f;
+            
+            // Keep forcing CallerCallLenght to fast duration on all patched FSMs
+            // This prevents other FSMs (like Data) from overwriting it during call setup
+            for (int i = PatchedFsmList.Count - 1; i >= 0; i--)
+            {
+                PlayMakerFSM fsm = PatchedFsmList[i];
+                if (fsm == null || fsm.FsmVariables == null)
+                {
+                    PatchedFsmList.RemoveAt(i);
+                    continue;
+                }
+
+                FsmFloat callLength = fsm.FsmVariables.GetFsmFloat("CallerCallLenght");
+                if (callLength != null && callLength.Value > FastWaitSeconds)
+                {
+                    callLength.Value = FastWaitSeconds;
+                }
+            }
         }
     }
 }
